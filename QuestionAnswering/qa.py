@@ -1,4 +1,6 @@
 import sys
+#import re
+from nltk.data import *
 from Story import *
 from Question import *
 
@@ -23,22 +25,22 @@ def readQuestionsFile(storyId):
         if not questionId: break
         colonIndex = questionId.index(":")
         ques.quesId = questionId[colonIndex+2:]
-        print(ques.quesId)
+        #print(ques.quesId)
         # Question of the question
         question = questionFile.readline()
         colonIndex = question.index(":")
         ques.ques = question[colonIndex+2:]
-        print(ques.ques)
+        #print(ques.ques)
         # Question Type of the question
         questionText = question[colonIndex+2:]
         spaceIndex = questionText.index(" ")
         ques.quesType = questionText[0:spaceIndex+1]
-        print(ques.quesType)
+        #print(ques.quesType)
         # Question Difficulty of the question
         questionDiff = questionFile.readline()
         colonIndex = questionDiff.index(":")
         ques.difficulty = questionDiff[colonIndex+2:]
-        print(ques.difficulty)
+        #print(ques.difficulty)
         questionFile.readline()
         readQuestions.append(ques)
     return readQuestions
@@ -60,15 +62,24 @@ def readStoryFiles():
         story.storyId = storyId
         # Sentences of the story
         fileContent = storyFile.read()
-        story.sentences = fileContent.replace("\n", "").split(".")
-        print(story.sentences.__len__())
+        #story.sentences = fileContent.replace("\n", " ").split("(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s")
+        #story.sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s', fileContent.replace("\n", " "))
+        sent_detector = load('tokenizers/punkt/english.pickle')
+        story.sentences = sent_detector.tokenize(fileContent.strip())
         # Questions of the story
         story.questions = readQuestionsFile(storyId)
         storyObjects.append(story)
 
+def beginAnswering():
+    for story in storyObjects:
+        for ques in story.questions:
+            print("Question: " + ques.quesId)
+
+
 if __name__ == '__main__':
     readInputFile()
     readStoryFiles()
+    beginAnswering()
 
 
 
