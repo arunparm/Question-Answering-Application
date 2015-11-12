@@ -83,7 +83,6 @@ def readStoryFiles():
 
 
 def wordMatch(sentences, ques):
-    # Remove stop words
     stopWords = stopwords.words('english')
     quesWords = word_tokenize(ques.ques)
     lemmatizer = WordNetLemmatizer()
@@ -95,6 +94,7 @@ def wordMatch(sentences, ques):
         sent = sent.replace(".", "")
         sent = sent.replace(",", "")
         sentenceWords = word_tokenize(sent)
+        # Removing stop words
         filteredWords = []
         for word in sentenceWords:
             if word not in stopWords:
@@ -150,7 +150,132 @@ def whoQuestions(sentences, ques):
     # Rule 1
     wordMatch(sentences, ques)
 
+def whenQuestions(sentences, ques):
+    timeKeywords = ['first', 'last', 'since', 'ago']
+    sentKeywords = ['start', 'begin', 'since', 'year']
+    quesKeywords = ['start', 'begin']
+    TIME = ['morning', 'evening', 'tomorrow', 'soon', 'yesterday', 'last', 'week', 'recently', 'hour', 'ago', 'while', 'past', 'present', 'january', 'february', 'march',
+            'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday',
+            'noon', 'month', 'year', 'everyday', 'day', 'today', 'seconds', 'minute', 'night', 'time', 'sunrise', 'sunset', 'decade']
+    for year in range(1400, 2016):
+        TIME.append(year)
 
+    stopWords = stopwords.words('english')
+    quesWords = word_tokenize(ques.ques)
+    lemmatizer = WordNetLemmatizer()
+    quesWords_Lemmatized = [lemmatizer.lemmatize(word) for word in quesWords]
+
+    maxScore = 0
+    maxSentence = ''
+    for sent in sentences:
+        score = 0
+        sent = sent.replace(".", "")
+        sent = sent.replace(",", "")
+        # Rule 1
+        sentenceWords = word_tokenize(sent)
+        for word in sentenceWords:
+            if word.lower() in TIME:
+                score += 4
+                # WordMatch
+                # Removing stop words
+                filteredWords = []
+                for word in sentenceWords:
+                    if word not in stopWords:
+                        filteredWords.append(word)
+
+                filteredWords_Lemmatized = [lemmatizer.lemmatize(word) for word in filteredWords]
+
+                postags = nltk.pos_tag(filteredWords_Lemmatized)
+                dict = {}
+                propernouns = []
+                referencetohuman = 'false'
+                for tag in postags:
+                    dict[tag[0]] = tag[1]
+                    if 'NNP' in tag[1]:
+                        propernouns.append(tag[0])
+                    if 'NN' in tag[1]:
+                        referencetohuman = 'true'
+
+                for qWord in quesWords_Lemmatized:
+                    if qWord in filteredWords_Lemmatized:
+                        if 'VB' in dict[qWord]:
+                            score += 6
+                            #break
+                        else:
+                            score += 3
+                            #break
+
+        # Rule 2
+        if 'the last' in ques.ques and any(key in sent for key in timeKeywords):
+            score += 20
+
+        # Rule 3
+        if any(key in ques.ques for key in quesKeywords) and any(key1 in sent for key1 in sentKeywords):
+            score += 20
+
+    if score > maxScore:
+        maxScore = score
+        maxSentence = sent
+
+    print("Answer: " + maxSentence.replace("\n", " "))
+    answerFile.write("\nAnswer: " + maxSentence.replace("\n", " ") + "\n\n")
+
+def whereQuestions(sentences, ques):
+    stopWords = stopwords.words('english')
+    quesWords = word_tokenize(ques.ques)
+    lemmatizer = WordNetLemmatizer()
+    quesWords_Lemmatized = [lemmatizer.lemmatize(word) for word in quesWords]
+    locationPreps = ['in', 'on', 'at', 'by', 'near', 'nearby', 'above', 'below', 'over', 'under', 'up', 'down', 'around', 'through', 'inside', 'outside', 'between', 'beside',
+                     'beyond', 'in front of', 'in back of', 'behind', 'next to', 'on top of', 'within', 'beneath', 'underneath', 'among', 'along', 'against']
+    maxSentence = ''
+    maxScore = 0
+    for sent in sentences:
+        score = 0
+        sent = sent.replace(".", "")
+        sent = sent.replace(",", "")
+        sentenceWords = word_tokenize(sent)
+        # Removing stop words
+        filteredWords = []
+        for word in sentenceWords:
+            if word not in stopWords:
+                filteredWords.append(word)
+
+        filteredWords_Lemmatized = [lemmatizer.lemmatize(word) for word in filteredWords]
+
+        postags = nltk.pos_tag(filteredWords_Lemmatized)
+        dict = {}
+        propernouns = []
+        referencetohuman = 'false'
+        for tag in postags:
+            dict[tag[0]] = tag[1]
+            if 'NNP' in tag[1]:
+                propernouns.append(tag[0])
+            if 'NN' in tag[1]:
+                referencetohuman = 'true'
+
+        #Rule 1
+        for qWord in quesWords_Lemmatized:
+            if qWord in filteredWords_Lemmatized:
+                if 'VB' in dict[qWord]:
+                    score += 6
+                    #break
+                else:
+                    score += 3
+                    #break
+
+        # Rule 2
+        for word in sentenceWords:
+            if word in locationPreps:
+                score += 4
+
+        # Rule 3
+
+        if score > maxScore:
+        maxScore = score
+        maxSentence = sent
+
+    print("Answer: " + maxSentence.replace("\n", " "))
+    answerFile.write("\nAnswer: " + maxSentence.replace("\n", " ") + "\n\n")
 
 def beginAnswering():
     global answerFile
@@ -162,11 +287,11 @@ def beginAnswering():
             if ques.quesType == "Who":
                 whoQuestions(story.sentences, ques)
             elif ques.quesType == "Where":
-                whoQuestions(story.sentences, ques)
+                whereQuestions(story.sentences, ques)
             elif ques.quesType == "Which":
                 whoQuestions(story.sentences, ques)
             elif ques.quesType == "When":
-                whoQuestions(story.sentences, ques)
+                whenQuestions(story.sentences, ques)
             else:
                 whoQuestions(story.sentences, ques)
 
