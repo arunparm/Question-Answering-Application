@@ -15,7 +15,7 @@ answerFile = None
 
 
 def readInputFile():
-    inputFile = open("input13.txt", 'r')  # Read from command line
+    inputFile = open("inputfile.txt", 'r')  # Read from command line
     global directoryName
     directoryName = inputFile.readline().rstrip("\n")
     for line in inputFile:
