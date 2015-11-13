@@ -1,13 +1,12 @@
 import sys
-# import re
-from nltk.data import *
+
 from nltk.corpus import stopwords
 from nltk.tokenize import *
 from Story import *
 from Question import *
-from nltk.stem.porter import *
 from nltk.stem.wordnet import WordNetLemmatizer
 import nltk
+from nltk.tree import Tree
 
 directoryName = ''
 storyIds = []  # All the story ids in the input file
@@ -16,7 +15,7 @@ answerFile = None
 
 
 def readInputFile():
-    inputFile = open("inputAll.txt", 'r')  # Read from command line
+    inputFile = open("input13.txt", 'r')  # Read from command line
     global directoryName
     directoryName = inputFile.readline().rstrip("\n")
     for line in inputFile:
@@ -220,6 +219,8 @@ def whenQuestions(sentences, ques):
     print("Answer: " + maxSentence.replace("\n", " "))
     answerFile.write("\nAnswer: " + maxSentence.replace("\n", " ") + "\n\n")
 
+
+
 def whereQuestions(sentences, ques):
     stopWords = stopwords.words('english')
     quesWords = word_tokenize(ques.ques)
@@ -269,10 +270,15 @@ def whereQuestions(sentences, ques):
                 score += 4
 
         # Rule 3
+        sentTags = nltk.pos_tag(sentenceWords)
+        tree = nltk.ne_chunk(sentTags)
+        for i in tree:
+            if type(i) == Tree and 'LOCATION' in i.label():
+                score += 6
 
         if score > maxScore:
-        maxScore = score
-        maxSentence = sent
+            maxScore = score
+            maxSentence = sent
 
     print("Answer: " + maxSentence.replace("\n", " "))
     answerFile.write("\nAnswer: " + maxSentence.replace("\n", " ") + "\n\n")
