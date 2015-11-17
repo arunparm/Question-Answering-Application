@@ -1,11 +1,11 @@
 import sys
-
+import nltk
+nltk.download('all')
 from nltk.corpus import stopwords
 from nltk.tokenize import *
 from Story import *
 from Question import *
 from nltk.stem.wordnet import WordNetLemmatizer
-import nltk
 from nltk.tree import Tree
 
 directoryName = ''
@@ -15,7 +15,7 @@ answerFile = None
 
 
 def readInputFile():
-    inputFile = open("inputfile.txt", 'r')  # Read from command line
+    inputFile = open("input13.txt", 'r')  # Read from command line
     global directoryName
     directoryName = inputFile.readline().rstrip("\n")
     for line in inputFile:
@@ -41,8 +41,14 @@ def readQuestionsFile(storyId):
         # Question Type of the question
         questionText = question[colonIndex + 2:]
         spaceIndex = questionText.index(" ")
-        ques.quesType = questionText[0:spaceIndex]
-        # print(ques.quesType)
+        firstWord = questionText[0:spaceIndex]
+        quesTypes = ['why', 'what', 'where', 'who', 'when', 'how']
+        if firstWord.lower() in quesTypes:
+            ques.quesType = firstWord
+        else:
+            for qtype in quesTypes:
+                if qtype in ques.ques.lower():
+                    ques.quesType = qtype
         # Question Difficulty of the question
         questionDiff = questionFile.readline()
         colonIndex = questionDiff.index(":")
@@ -219,6 +225,88 @@ def whenQuestions(sentences, ques):
     print("Answer: " + maxSentence.replace("\n", " "))
     answerFile.write("\nAnswer: " + maxSentence.replace("\n", " ") + "\n\n")
 
+def getBestSents(sentences, ques):
+    bestSentences = []
+    sentenceScore = {}
+    stopWords = stopwords.words('english')
+    quesWords = word_tokenize(ques.ques)
+    lemmatizer = WordNetLemmatizer()
+    quesWords_Lemmatized = [lemmatizer.lemmatize(word) for word in quesWords]
+    for sent in sentences:
+        score = 0
+        origSent = sent
+        sent = sent.replace(".", "")
+        sent = sent.replace(",", "")
+        sentenceWords = word_tokenize(sent)
+        # Removing stop words
+        filteredWords = []
+        for word in sentenceWords:
+            if word not in stopWords:
+                filteredWords.append(word)
+
+        filteredWords_Lemmatized = [lemmatizer.lemmatize(word) for word in filteredWords]
+
+        postags = nltk.pos_tag(filteredWords_Lemmatized)
+        dict = {}
+        propernouns = []
+        referencetohuman = 'false'
+        for tag in postags:
+            dict[tag[0]] = tag[1]
+            if 'NNP' in tag[1]:
+                propernouns.append(tag[0])
+            if 'NN' in tag[1]:
+                referencetohuman = 'true'
+
+        #Rule 1
+        for qWord in quesWords_Lemmatized:
+            if qWord in filteredWords_Lemmatized:
+                if 'VB' in dict[qWord]:
+                    score += 6
+                    #break
+                else:
+                    score += 3
+                    #break
+
+        if score > 0:
+            bestSentences.append(origSent)
+
+    return bestSentences
+
+
+
+def whyQuestions(sentences, ques):
+    bestSentences = getBestSents(sentences, ques)
+    precedingSentences = []
+    followingSentences = []
+    for i in range(0, sentences. __len__()):
+        if sentences[i] in bestSentences:
+            if i+1 < sentences.__len__():
+                followingSentences.append(sentences[i+1])
+            if i-1 >= 0:
+                precedingSentences.append(sentences[i-1])
+
+    maxSentence = ''
+    maxScore = 0;
+    # Rule 1
+    for sent in sentences:
+        score = 0
+        if sent in bestSentences:
+            score += 3
+        if sent in precedingSentences:
+            score += 3
+        if sent in followingSentences:
+            score += 4
+        if 'want' in sent:
+            score += 4
+        if 'so' in sent or 'because' in sent:
+            score += 4
+
+        if score > maxScore:
+            maxScore = score
+            maxSentence = sent
+
+    print("Answer: " + maxSentence.replace("\n", " "))
+    answerFile.write("\nAnswer: " + maxSentence.replace("\n", " ") + "\n\n")
 
 
 def whereQuestions(sentences, ques):
@@ -294,8 +382,8 @@ def beginAnswering():
                 whoQuestions(story.sentences, ques)
             elif ques.quesType == "Where":
                 whereQuestions(story.sentences, ques)
-            elif ques.quesType == "Which":
-                whoQuestions(story.sentences, ques)
+            elif ques.quesType == "Why":
+                whyQuestions(story.sentences, ques)
             elif ques.quesType == "When":
                 whenQuestions(story.sentences, ques)
             else:
