@@ -6,3 +6,7 @@ class Story:
         self.storyId = ''
         self.questions = []
         self.sentences = []
+        self.sentPosTags = {}
+        self.sentLemmaWords = {}
+        self.sentWords = {}
+        self.allWordsPosTags = {}
