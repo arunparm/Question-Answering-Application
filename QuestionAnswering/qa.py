@@ -155,7 +155,7 @@ def wordMatch(story, ques):
                 referencetohuman = 'true'
 
         # Rule 1
-        for qWo0rd in quesWords_Lemmatized:
+        for qWord in quesWords_Lemmatized:
             if qWord in filteredWords_Lemmatized:
                 if 'VB' in dict[qWord]:
                     score += 6
