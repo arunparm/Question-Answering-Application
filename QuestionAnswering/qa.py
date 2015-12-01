@@ -179,7 +179,7 @@ def wordMatch(story, ques):
         if propernouns.__len__() > 0 or referencetohuman == 'true':
             score += 4
 
-        if score > maxScore:
+        if score >= maxScore:
             maxScore = score
             maxSentence = sent
             maxSentenceWords = story.sentWords[sent]
@@ -270,7 +270,7 @@ def whenQuestions(story, ques):
         if any(key.lower() in quesWords_Lemmatized for key in quesKeywords) and any(key1.lower() in story.sentLemmaWords[sent] for key1 in sentKeywords):
             score += 20
 
-        if score > maxScore:
+        if score >= maxScore:
             maxScore = score
             maxSentence = sent
             maxSentenceWords = story.sentWords[sent]
@@ -365,7 +365,7 @@ def whyQuestions(story, ques):
         if 'so' in story.sentWords[sent] or 'because' in story.sentWords[sent] or 'Because' in story.sentWords[sent] or 'So' in story.sentWords[sent]:
             score += 4
 
-        if score > maxScore:
+        if score >= maxScore:
             maxScore = score
             maxSentence = sent
             maxSentenceWords = story.sentWords[sent]
@@ -429,7 +429,7 @@ def whereQuestions(story, ques):
             if type(i) == Tree and 'LOCATION' in i.label():
                 score += 6
 
-        if score > maxScore:
+        if score >= maxScore:
             maxScore = score
             maxSentence = sent
             maxSentenceWords = story.sentWords[sent]
@@ -499,7 +499,7 @@ def whatQuestions(story, ques):
                     score += 20
                     break
 
-        if score > maxScore:
+        if score >= maxScore:
             maxScore = score
             maxSentence = sent
             maxSentenceWords = story.sentWords[sent]
@@ -547,7 +547,7 @@ def defaultQues(story, ques):
                     score += 3
                     # break
 
-        if score > maxScore:
+        if score >= maxScore:
             maxScore = score
             maxSentence = sent
             maxSentenceWords = story.sentWords[sent]
